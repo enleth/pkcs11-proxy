@@ -9,6 +9,23 @@ project (pkcs11 C)
 set(PKCS11_PROXY_SRCS gck-rpc-module.c gck-rpc-message.c gck-rpc-util.c egg-buffer.c gck-rpc-tls-psk.c)
 set(PKCS11_DAEMON_SRCS egg-buffer.c gck-rpc-daemon-standalone.c gck-rpc-dispatch.c gck-rpc-message.c gck-rpc-util.c syscall-reporter.c syscall-names.h gck-rpc-tls-psk.c)
 
+# Search OpenSSL
+if (APPLE)
+    set(ENV{PKG_CONFIG_PATH} "/usr/local/opt/openssl/lib/pkgconfig/:$ENV{PKG_CONFIG_PATH}")
+endif()
+
+find_package(PkgConfig REQUIRED)
+pkg_search_module(OPENSSL REQUIRED openssl)
+
+if( OPENSSL_FOUND )
+
+    include_directories(${OPENSSL_INCLUDE_DIRS})
+    link_directories(${OPENSSL_LIBRARY_DIRS})
+    message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
+else()
+    # Error; with REQUIRED, pkg_search_module() will throw an error by it's own
+endif()
+
 add_definitions(-Wall)
 add_library(pkcs11-proxy SHARED ${PKCS11_PROXY_SRCS})
 
@@ -34,7 +51,12 @@ if (WIN32)
 endif (WIN32)
 
 target_link_libraries (pkcs11-proxy pthread ssl crypto)
-target_link_libraries (pkcs11-daemon dl pthread ssl crypto seccomp)
+
+if (APPLE)
+    target_link_libraries (pkcs11-daemon dl pthread ssl crypto)
+else()
+    target_link_libraries (pkcs11-daemon dl pthread ssl crypto seccomp)
+endif()
 
 install_targets (/lib pkcs11-proxy)
 install_targets (/bin pkcs11-daemon)
