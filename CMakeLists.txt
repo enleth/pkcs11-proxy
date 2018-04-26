@@ -6,8 +6,13 @@ endif(COMMAND cmake_policy)
 
 project (pkcs11 C)
 
+set(VERSION "1.0.0")
+
 set(PKCS11_PROXY_SRCS gck-rpc-module.c gck-rpc-message.c gck-rpc-util.c egg-buffer.c gck-rpc-tls-psk.c)
 set(PKCS11_DAEMON_SRCS egg-buffer.c gck-rpc-daemon-standalone.c gck-rpc-dispatch.c gck-rpc-message.c gck-rpc-util.c syscall-reporter.c syscall-names.h gck-rpc-tls-psk.c)
+
+# Uncomment for a debug build
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
 
 # Search OpenSSL
 if (APPLE)
@@ -65,3 +70,20 @@ add_custom_command(
    OUTPUT syscall-names.h 
    COMMAND ${CMAKE_SOURCE_DIR}/mksyscalls.sh
    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+set(CPACK_PACKAGE_VERSION ${VERSION})
+set(CPACK_GENERATOR "RPM")
+set(CPACK_PACKAGE_NAME "pkcs11_proxy")
+set(CPACK_PACKAGE_RELEASE 1)
+set(CPACK_RPM_PACKAGE_RELEASE 1)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PKCS#11 Proxy")
+set(CPACK_PACKAGE_CONTACT "Jon Scobie")
+set(CPACK_PACKAGE_VENDOR "Callsign Inc")
+set(CPACK_RPM_PACKAGE_LICENSE "GPL v2")
+set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
+set(CPACK_PACKAGE_DESCRIPTION_FILE, "${CMAKE_CURRENT_BINARY_DIR}/USAGE")
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/usr/local;/usr/local/lib;/usr/local/bin")
+set(CPACK_SOURCE_GENERATOR "RPM")
+include(CPack)
